@@ -1,14 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import VersionGallery from './components/VersionGallery';
 import Crossword from './components/Crossword';
 import { Sparkles, Check } from 'lucide-react';
+import { io } from 'socket.io-client';
+
+const socket = io();
 
 export default function App() {
   const currentDate = "Wednesday, March 4, 2026";
   const [checkedBingo, setCheckedBingo] = useState<boolean[]>(new Array(9).fill(false));
-  const [scores, setScores] = useState<{name: string, score: number}[]>([]);
+  const [scores, setScores] = useState<{id?: number, name: string, score: number}[]>([]);
   const [playerName, setPlayerName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Fetch initial scores
+    fetch('/api/bingo-scores')
+      .then(res => res.json())
+      .then(data => {
+        setScores(data.map((s: any) => ({ id: s.id, name: s.player_name, score: s.score })));
+      });
+
+    // Listen for new scores
+    socket.on('new_bingo_score', (newScore: any) => {
+      setScores(prev => {
+        const mapped = { id: newScore.id, name: newScore.player_name, score: newScore.score };
+        if (prev.some(s => s.id === mapped.id)) return prev;
+        return [mapped, ...prev].sort((a, b) => b.score - a.score).slice(0, 10);
+      });
+    });
+
+    return () => {
+      socket.off('new_bingo_score');
+    };
+  }, []);
 
   const bingoItems = [
     "Went on a road trip together",
@@ -28,11 +54,30 @@ export default function App() {
     setCheckedBingo(newChecked);
   };
 
-  const submitScore = () => {
-    if (!playerName.trim()) return;
+  const submitScore = async () => {
+    if (!playerName.trim() || isSubmitting) return;
     const currentScore = checkedBingo.filter(Boolean).length;
-    setScores(prev => [...prev, { name: playerName, score: currentScore }].sort((a, b) => b.score - a.score));
-    setPlayerName("");
+    
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/bingo-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_name: playerName,
+          score: currentScore
+        })
+      });
+      
+      if (res.ok) {
+        setPlayerName("");
+        // Score will be updated via socket
+      }
+    } catch (err) {
+      console.error('Failed to submit bingo score:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -204,9 +249,10 @@ export default function App() {
                     />
                     <button 
                       onClick={submitScore}
-                      className="bg-ink text-paper px-4 py-1 text-xs font-mono uppercase hover:bg-ink/80 transition-colors"
+                      disabled={isSubmitting}
+                      className="bg-ink text-paper px-4 py-1 text-xs font-mono uppercase hover:bg-ink/80 transition-colors disabled:opacity-50"
                     >
-                      Submit
+                      {isSubmitting ? '...' : 'Submit'}
                     </button>
                   </div>
                   <p className="text-[10px] font-mono mt-2 opacity-60 italic">Current Score: {checkedBingo.filter(Boolean).length}/9</p>
@@ -233,7 +279,7 @@ export default function App() {
                     ))
                   )}
                 </div>
-                <p className="text-[8px] font-mono uppercase mt-6 opacity-40 text-center tracking-tighter">Scores are reset on page refresh. Honor system in effect.</p>
+                <p className="text-[8px] font-mono uppercase mt-6 opacity-40 text-center tracking-tighter">Top 10 scores are saved to the server. Real-time updates enabled.</p>
               </div>
             </div>
 

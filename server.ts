@@ -28,7 +28,22 @@ async function startServer() {
       known_since INTEGER NOT NULL, -- Year
       image_url TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      player_name TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      time_taken INTEGER NOT NULL, -- in seconds
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS bingo_scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      player_name TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   app.use(express.json({ limit: '10mb' }));
@@ -64,6 +79,59 @@ async function startServer() {
 
     io.emit("new_version", newVersion);
     res.json(newVersion);
+  });
+
+  app.get("/api/scores", (req, res) => {
+    const scores = db.prepare("SELECT * FROM scores ORDER BY score DESC, time_taken ASC LIMIT 10").all();
+    res.json(scores);
+  });
+
+  app.post("/api/scores", (req, res) => {
+    const { player_name, score, time_taken } = req.body;
+    if (!player_name || score === undefined || time_taken === undefined) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    const info = db.prepare(`
+      INSERT INTO scores (player_name, score, time_taken) 
+      VALUES (?, ?, ?)
+    `).run(player_name, score, time_taken);
+    
+    const newScore = {
+      id: info.lastInsertRowid,
+      player_name,
+      score,
+      time_taken,
+      timestamp: new Date().toISOString()
+    };
+    
+    io.emit("new_score", newScore);
+    res.json(newScore);
+  });
+
+  app.get("/api/bingo-scores", (req, res) => {
+    const scores = db.prepare("SELECT * FROM bingo_scores ORDER BY score DESC, timestamp DESC LIMIT 10").all();
+    res.json(scores);
+  });
+
+  app.post("/api/bingo-scores", (req, res) => {
+    const { player_name, score } = req.body;
+    if (!player_name || score === undefined) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    const info = db.prepare(`
+      INSERT INTO bingo_scores (player_name, score) 
+      VALUES (?, ?)
+    `).run(player_name, score);
+    
+    const newScore = {
+      id: info.lastInsertRowid,
+      player_name,
+      score,
+      timestamp: new Date().toISOString()
+    };
+    
+    io.emit("new_bingo_score", newScore);
+    res.json(newScore);
   });
 
   app.delete("/api/versions", (req, res) => {
