@@ -206,13 +206,14 @@ export default function App() {
             <div className="h-px bg-ink flex-grow" />
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Bingo */}
-            <div className="lg:col-span-5">
-              <div className="border-2 border-ink p-6 bg-paper relative overflow-hidden h-full">
+            <div className="lg:col-span-1">
+              <div className="border-2 border-ink p-6 bg-paper relative overflow-hidden h-full flex flex-col">
                 <div className="absolute top-0 right-0 bg-ink text-paper px-3 py-1 text-[10px] font-mono uppercase tracking-widest">Interactive</div>
                 <h3 className="font-serif font-black uppercase text-2xl mb-6 text-center border-b-2 border-ink pb-2">Aditya Bingo</h3>
-                <div className="grid grid-cols-3 gap-3">
+                
+                <div className="grid grid-cols-3 gap-3 mb-6">
                   {bingoItems.map((item, i) => (
                     <button
                       key={i}
@@ -237,7 +238,8 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-6 p-4 border border-ink/20 bg-ink/5">
+
+                <div className="p-4 border border-ink/20 bg-ink/5 mb-8">
                   <p className="text-xs font-mono uppercase mb-2">Submit your score:</p>
                   <div className="flex gap-2">
                     <input 
@@ -257,34 +259,39 @@ export default function App() {
                   </div>
                   <p className="text-[10px] font-mono mt-2 opacity-60 italic">Current Score: {checkedBingo.filter(Boolean).length}/9</p>
                 </div>
-              </div>
-            </div>
 
-            {/* Scoreboard */}
-            <div className="lg:col-span-3">
-              <div className="border-2 border-ink p-6 bg-ink text-paper h-full">
-                <h3 className="font-serif font-black uppercase text-2xl mb-6 text-center border-b border-paper/20 pb-2">Scoreboard</h3>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {scores.length === 0 ? (
-                    <p className="text-[10px] font-mono uppercase opacity-40 text-center py-8 italic">No scores yet. Be the first!</p>
-                  ) : (
-                    scores.map((s, i) => (
-                      <div key={i} className="flex justify-between items-center border-b border-paper/10 pb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-mono opacity-40">#{i + 1}</span>
-                          <span className="text-sm font-serif italic">{s.name}</span>
-                        </div>
-                        <span className="text-xl font-serif font-black">{s.score}</span>
+                {/* Bingo Leaderboard */}
+                <div className="mt-auto pt-6 border-t border-ink/10">
+                  <h4 className="font-serif font-black uppercase text-xs mb-4 flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    Bingo Hall of Fame
+                  </h4>
+                  <div className="bg-white/50 rounded-lg p-3 border border-ink/5 min-h-[120px]">
+                    {scores.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-ink/30 font-mono text-[9px] uppercase italic">
+                        No scores yet.
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      <div className="space-y-1.5">
+                        {scores.map((s, idx) => (
+                          <div key={s.id || idx} className="flex justify-between items-center font-mono text-[9px] uppercase border-b border-ink/5 pb-1 last:border-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-ink/30 w-3">{idx + 1}.</span>
+                              <span className="font-bold truncate max-w-[100px]">{s.name}</span>
+                            </div>
+                            <span className="font-black text-ink/60">{s.score}/9</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[7px] font-mono uppercase mt-3 opacity-40 text-center tracking-tighter">Real-time updates enabled.</p>
                 </div>
-                <p className="text-[8px] font-mono uppercase mt-6 opacity-40 text-center tracking-tighter">Top 10 scores are saved to the server. Real-time updates enabled.</p>
               </div>
             </div>
 
             {/* Crossword */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-1">
               <div className="border-2 border-ink p-6 bg-white h-full">
                 <h3 className="font-serif font-black uppercase text-xl mb-6 text-center border-b border-ink pb-2">Daily Crossword</h3>
                 <Crossword />
