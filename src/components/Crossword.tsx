@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Timer, CheckCircle2, User, Send, Quote } from 'lucide-react';
-import { io } from 'socket.io-client';
 
-const socket = io();
 
 interface Cell {
   row: number;
@@ -53,13 +51,7 @@ export default function Crossword() {
       .then(res => res.json())
       .then(setScores);
 
-    socket.on('new_score', (newScore) => {
-      setScores(prev => [newScore, ...prev].sort((a, b) => b.score - a.score || a.time_taken - b.time_taken).slice(0, 10));
-    });
-
-    return () => {
-      socket.off('new_score');
-    };
+    // Real-time updates removed for Vercel compatibility. Use polling if needed.
   }, []);
 
   useEffect(() => {

@@ -3,9 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, X, Upload, User, Quote, Camera, Trash2 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { uploadToBlobStorage } from '../lib/blobUpload';
-import { io } from 'socket.io-client';
 
-const socket = io();
 
 interface Version {
   id: number;
@@ -33,21 +31,7 @@ export default function VersionGallery() {
       .then(res => res.json())
       .then(setVersions);
 
-    socket.on('new_version', (newVersion) => {
-      setVersions(prev => {
-        if (prev.some(v => v.id === newVersion.id)) return prev;
-        return [...prev, newVersion].sort((a, b) => a.known_since - b.known_since);
-      });
-    });
-
-    socket.on('versions_cleared', () => {
-      setVersions([]);
-    });
-
-    return () => {
-      socket.off('new_version');
-      socket.off('versions_cleared');
-    };
+    // Real-time updates removed for Vercel compatibility. Use polling if needed.
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
