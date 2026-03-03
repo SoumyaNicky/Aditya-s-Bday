@@ -3,9 +3,7 @@ import { motion } from 'motion/react';
 import VersionGallery from './components/VersionGallery';
 import Crossword from './components/Crossword';
 import { Sparkles, Check } from 'lucide-react';
-import { io } from 'socket.io-client';
 
-const socket = io();
 
 export default function App() {
   const currentDate = "Wednesday, March 4, 2026";
@@ -15,25 +13,17 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Fetch initial scores
-    fetch('/api/bingo-scores')
-      .then(res => res.json())
-      .then(data => {
-        setScores(data.map((s: any) => ({ id: s.id, name: s.player_name, score: s.score })));
-      });
-
-    // Listen for new scores
-    socket.on('new_bingo_score', (newScore: any) => {
-      setScores(prev => {
-        const mapped = { id: newScore.id, name: newScore.player_name, score: newScore.score };
-        if (prev.some(s => s.id === mapped.id)) return prev;
-        return [mapped, ...prev].sort((a, b) => b.score - a.score).slice(0, 10);
-      });
-    });
-
-    return () => {
-      socket.off('new_bingo_score');
+    let interval: NodeJS.Timeout;
+    const fetchScores = () => {
+      fetch('/api/bingo-scores')
+        .then(res => res.json())
+        .then(data => {
+          setScores(data.map((s: any) => ({ id: s.id, name: s.player_name, score: s.score })));
+        });
     };
+    fetchScores();
+    interval = setInterval(fetchScores, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const bingoItems = [
@@ -71,7 +61,7 @@ export default function App() {
       
       if (res.ok) {
         setPlayerName("");
-        // Score will be updated via socket
+        // Score will be updated via polling
       }
     } catch (err) {
       console.error('Failed to submit bingo score:', err);
