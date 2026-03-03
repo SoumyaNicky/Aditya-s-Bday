@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, X, Upload, User, Quote, Camera, Trash2 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
+import { uploadToBlobStorage } from '../lib/blobUpload';
 import { io } from 'socket.io-client';
 
 const socket = io();
@@ -49,14 +50,16 @@ export default function VersionGallery() {
     };
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image_url: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        const url = await uploadToBlobStorage(file, `images/${Date.now()}_${file.name}`);
+        setFormData(prev => ({ ...prev, image_url: url }));
+      } catch (err) {
+        alert('Image upload failed.');
+        console.error(err);
+      }
     }
   };
 

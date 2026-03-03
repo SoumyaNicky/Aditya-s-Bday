@@ -56,18 +56,16 @@ async function startServer() {
     res.json(versions);
   });
 
+  // image_url is now a blob storage URL, not base64
   app.post("/api/versions", (req, res) => {
     const { friend_name, version_title, known_since, image_url } = req.body;
-    
     if (!friend_name || !version_title || !known_since) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-
     const info = db.prepare(`
       INSERT INTO versions (friend_name, version_title, known_since, image_url) 
       VALUES (?, ?, ?, ?)
     `).run(friend_name, version_title, parseInt(known_since), image_url || null);
-
     const newVersion = { 
       id: info.lastInsertRowid, 
       friend_name, 
@@ -76,7 +74,6 @@ async function startServer() {
       image_url, 
       timestamp: new Date().toISOString() 
     };
-
     io.emit("new_version", newVersion);
     res.json(newVersion);
   });
