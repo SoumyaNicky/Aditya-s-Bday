@@ -166,9 +166,6 @@ export default function VersionGallery() {
 
               <div className="flex justify-between items-center mb-8 border-b-2 border-ink pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="bg-ink text-paper p-2">
-                    <Camera className="w-6 h-6" />
-                  </div>
                   <h4 className="text-2xl font-serif font-black uppercase">Press Accreditation</h4>
                 </div>
                 <button onClick={() => setIsFormOpen(false)} className="hover:rotate-90 transition-transform"><X className="w-6 h-6" /></button>
