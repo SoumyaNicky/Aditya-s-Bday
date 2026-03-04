@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, Upload, User, Quote, Camera, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-import { uploadToBlobStorage } from '../lib/blobUpload';
 
 
 interface Version {
@@ -10,7 +9,6 @@ interface Version {
   friend_name: string;
   version_title: string;
   known_since: number;
-  image_url?: string;
   timestamp: string;
 }
 
@@ -22,9 +20,7 @@ export default function VersionGallery() {
     friend_name: '',
     version_title: '',
     known_since: 1996,
-    image_url: ''
   });
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch('/api/versions')
@@ -34,19 +30,7 @@ export default function VersionGallery() {
     // Real-time updates removed for Vercel compatibility. Use polling if needed.
   }, []);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const url = await uploadToBlobStorage(file, `images/${Date.now()}_${file.name}`);
-        setFormData(prev => ({ ...prev, image_url: url }));
-      } catch (err: any) {
-        const message = err?.message || String(err);
-        alert('Image upload failed: ' + message);
-        console.error('upload error', err);
-      }
-    }
-  };
+
 
   const handleReset = async () => {
     if (!isConfirmingPurge) {
@@ -86,7 +70,6 @@ export default function VersionGallery() {
         friend_name: '',
         version_title: '',
         known_since: 1996,
-        image_url: ''
       });
     }
   };
@@ -148,35 +131,7 @@ export default function VersionGallery() {
               </div>
             </div>
 
-            {version.image_url && (
-              <div className="mb-4 group">
-                <div className="relative overflow-hidden">
-                  <img
-                    src={version.image_url}
-                    alt={version.version_title}
-                    className="w-full sepia-img grayscale group-hover:grayscale-0 transition-all duration-1000 ease-in-out"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-ink/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <p className="text-[9px] italic mt-2 text-ink/60 leading-tight">
-                  <span className="font-bold uppercase mr-1">Archive:</span> 
-                  Fig. {index + 1}: A rare archival fragment of the "{version.version_title}" era.
-                </p>
-              </div>
-            )}
 
-            <p className={cn(
-              "text-sm leading-relaxed text-justify mb-4 font-serif italic",
-              !version.image_url && "dropcap"
-            )}>
-              {version.version_title}
-            </p>
-            
-            <div className="flex items-center justify-between pt-4 border-t border-dashed border-ink/20">
-              <span className="font-mono text-[8px] uppercase opacity-40">Ref: {version.id.toString().padStart(4, '0')}</span>
-              <span className="font-serif italic text-[10px] opacity-60">Continued on Page 30...</span>
-            </div>
           </motion.article>
         ))}
       </div>
@@ -256,23 +211,6 @@ export default function VersionGallery() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block font-mono text-[10px] uppercase mb-1">Archival Photo</label>
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-ink/20 h-32 flex flex-col items-center justify-center cursor-pointer hover:bg-ink/5 transition-colors"
-                  >
-                    {formData.image_url ? (
-                      <img src={formData.image_url} className="h-full w-full object-contain p-2" />
-                    ) : (
-                      <>
-                        <Camera className="w-6 h-6 mb-2 opacity-20" />
-                        <span className="font-mono text-[10px] uppercase opacity-40">Upload Fragment</span>
-                      </>
-                    )}
-                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
-                  </div>
-                </div>
 
                 <button
                   type="submit"
