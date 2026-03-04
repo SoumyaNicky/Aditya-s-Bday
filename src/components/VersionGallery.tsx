@@ -40,9 +40,10 @@ export default function VersionGallery() {
       try {
         const url = await uploadToBlobStorage(file, `images/${Date.now()}_${file.name}`);
         setFormData(prev => ({ ...prev, image_url: url }));
-      } catch (err) {
-        alert('Image upload failed.');
-        console.error(err);
+      } catch (err: any) {
+        const message = err?.message || String(err);
+        alert('Image upload failed: ' + message);
+        console.error('upload error', err);
       }
     }
   };

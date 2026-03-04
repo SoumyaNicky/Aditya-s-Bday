@@ -1,5 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -7,7 +5,7 @@ const pool = new Pool({
 });
 
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     try {
       const { rows } = await pool.query('SELECT * FROM bingo_scores ORDER BY score DESC, timestamp DESC LIMIT 10');
